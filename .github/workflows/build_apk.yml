@@ -3,18 +3,18 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Permite ejecutarlo manualmente desde un botón
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Descargar el código del repo
+      # 1. Obtener código
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configurar Java 17 (Necesario para Android SDK)
+      # 2. Configurar Java 17 (Requerido por Android SDK)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -28,27 +28,41 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      # 4. Instalar Flutter (Flet usa Flutter por debajo)
+      # 4. Instalar Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0' # Versión estable recomendada
+          flutter-version: '3.19.0'
           channel: 'stable'
 
-      # 5. Instalar dependencias del proyecto
-      - name: Install Dependencies
+      # 5. Instalar dependencias Linux (Evita errores de GTK en logs)
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+      # 6. Aceptar Licencias de Android (CRÍTICO)
+      - name: Accept Android Licenses
+        run: |
+          yes | flutter doctor --android-licenses
+
+      # 7. Instalar dependencias Python
+      - name: Install Python Dependencies
         run: |
           pip install -r requirements.txt
-          # Instalamos flet explicitamente para tener el comando CLI
-          pip install flet 
+          pip install flet
 
-      # 6. Compilar el APK
-      # Nota: Ajusta la ruta 'src/main.py' si tu archivo principal tiene otro nombre
+      # 8. Preparar Entry Point (CRÍTICO)
+      # Copiamos main.py a la raíz para que Flet lo detecte y los imports 'from src...' funcionen
+      - name: Move main.py to root
+        run: cp src/main.py main.py
+
+      # 9. Compilar APK
       - name: Build APK with Flet
         run: |
-          flet build apk --project "Startup Tycoon" --product "Startup Tycoon" src/main.py
+          flet build apk --project "Startup Tycoon" --product "Startup Tycoon" main.py
 
-      # 7. Subir el APK como "Artefacto" para que puedas descargarlo
+      # 10. Subir el APK resultante
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
