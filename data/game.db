@@ -1,0 +1,34 @@
+-- Creación de tablas para "Startup Tycoon"
+
+CREATE TABLE IF NOT EXISTS empleados (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    rol TEXT NOT NULL, -- 'Junior Dev', 'Senior Arch', 'Designer'
+    email TEXT UNIQUE NOT NULL,
+    salario_base REAL NOT NULL,
+    nivel INTEGER DEFAULT 1, -- Nivel del personaje
+    xp INTEGER DEFAULT 0,    -- Experiencia acumulada
+    fecha_contratacion TEXT,
+    estado TEXT DEFAULT 'ACTIVO' -- 'ACTIVO', 'DESPEDIDO'
+);
+
+CREATE TABLE IF NOT EXISTS nomina_historial (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    periodo TEXT NOT NULL, -- Ej: "2025-01" (Mes del juego)
+    total_pagado REAL,
+    total_deducciones REAL,
+    fecha_proceso TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS detalles_nomina (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nomina_id INTEGER,
+    empleado_id INTEGER,
+    salario_bruto REAL,
+    bono_rendimiento REAL, -- Gamificación: Bono por XP
+    deduccion_impuestos REAL,
+    deduccion_falla_servidor REAL, -- Evento aleatorio del juego
+    neto_pagado REAL,
+    FOREIGN KEY(nomina_id) REFERENCES nomina_historial(id),
+    FOREIGN KEY(empleado_id) REFERENCES empleados(id)
+);
