@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configurar Java 17 (Requerido por Android SDK)
+      # 2. Configurar Java 17
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -35,13 +35,13 @@ jobs:
           flutter-version: '3.19.0'
           channel: 'stable'
 
-      # 5. Instalar dependencias Linux (Evita errores de GTK en logs)
+      # 5. Instalar dependencias Linux
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
-      # 6. Aceptar Licencias de Android (CRÍTICO)
+      # 6. Aceptar Licencias de Android
       - name: Accept Android Licenses
         run: |
           yes | flutter doctor --android-licenses
@@ -52,15 +52,15 @@ jobs:
           pip install -r requirements.txt
           pip install flet
 
-      # 8. Preparar Entry Point (CRÍTICO)
-      # Copiamos main.py a la raíz para que Flet lo detecte y los imports 'from src...' funcionen
+      # 8. Mover main.py a la raíz (Estrategia Anti-Error)
       - name: Move main.py to root
         run: cp src/main.py main.py
 
-      # 9. Compilar APK
+      # 9. Compilar APK (CORREGIDO)
+      # Quitamos "main.py" del final y ponemos "." (directorio actual)
       - name: Build APK with Flet
         run: |
-          flet build apk --project "Startup Tycoon" --product "Startup Tycoon" main.py
+          flet build apk --project "Startup Tycoon" --product "Startup Tycoon" .
 
       # 10. Subir el APK resultante
       - name: Upload APK
